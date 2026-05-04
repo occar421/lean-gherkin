@@ -1,0 +1,6 @@
+name = "lean-gherkin"
+version = "0.1.0"
+defaultTargets = ["LeanGherkin"]
+
+[[lean_lib]]
+name = "LeanGherkin"

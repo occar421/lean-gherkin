@@ -11,7 +11,7 @@ syntax "then " str : gherkinStep
 syntax "and " str : gherkinStep
 syntax "but " str : gherkinStep
 
-syntax "scenario " str " do" ppLine gherkinStep* : gherkinScenario
-syntax "feature " str " do" ppLine gherkinScenario* : command
+syntax (name := scenarioSyntax) "scenario " str " do" ppLine gherkinStep* : gherkinScenario
+syntax (name := featureSyntax) "feature " str " do" ppLine gherkinScenario* : command
 
 end LeanGherkin

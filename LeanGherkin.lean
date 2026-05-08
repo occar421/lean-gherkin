@@ -2,4 +2,6 @@
 -- Import modules here that should be built as part of the library.
 import LeanGherkin.Ast
 import LeanGherkin.Syntax
+import LeanGherkin.Registry
+import LeanGherkin.Elab
 import LeanGherkin.Sample

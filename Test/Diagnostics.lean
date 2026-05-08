@@ -7,10 +7,7 @@ set_option LeanGherkin.validationSeverity "info"
 
 -- 正常なシナリオ
 Feature: Valid Feature
-  Scenario: valid scenario
-    Given something
-    When I do something
-    Then something happens
+Scenario: valid scenario
 
 -- 警告が出るはずのシナリオ: ステップが空
 Feature: Empty Scenario

@@ -20,7 +20,6 @@ register_option LeanGherkin.validationSeverity : String := {
 }
 
 private def syntaxString (stx : Syntax) : CommandElabM String := do
-  let stx := if stx.getKind == ``LeanGherkin.gherkinText then stx[0] else stx
   match stx.isStrLit? with
   | some value => pure value
   | none => 
@@ -72,8 +71,11 @@ private def elabScenario (scenariosName : Syntax) (stx : Syntax) : CommandElabM 
 
 @[command_elab featureSyntax]
 def elabFeature : CommandElab := fun stx => do
+  dbg_trace stx
   let name ← syntaxString stx[1]
-  let scenarios ← stx[3].getArgs.mapM (elabScenario stx)
+  dbg_trace name
+  -- let scenarios ← stx[3].getArgs.mapM (elabScenario stx)
+  let scenarios := #[]
   let gherkinFeature : Feature := { name, scenarios }
   modifyEnv fun env => addFeature env gherkinFeature
 

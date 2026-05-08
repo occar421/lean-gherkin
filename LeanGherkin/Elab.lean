@@ -150,7 +150,7 @@ def elabStepDef : CommandElab := fun stx => do
         throwErrorAt handlerStx "handler contains metavariables"
       
       if env.contains handlerName then
-        modifyEnv fun env => addStepDefinition env { pattern, handlerName }
+        modifyEnv fun env => addStepDefinition env { pattern, handlerName, defType := .effect }
       else
         let decl := Declaration.defnDecl {
           name := handlerName
@@ -162,7 +162,60 @@ def elabStepDef : CommandElab := fun stx => do
         }
         
         liftCoreM <| Lean.addAndCompile decl
-        modifyEnv fun env => addStepDefinition env { pattern, handlerName }
+        modifyEnv fun env => addStepDefinition env { pattern, handlerName, defType := .effect }
+  | _ => throwUnsupportedSyntax
+
+@[command_elab stepTheoremSyntax]
+def elabStepTheorem : CommandElab := fun stx => do
+  match stx with
+  | `(step_theorem $textStx:str : $typeStx:term := $proofStx:term) => do
+      let text ← syntaxString textStx
+      let pattern := parseStepPattern text
+      
+      let baseName := s!"stepTheorem_{Hashable.hash text}"
+      let theoremName := (← getCurrNamespace) ++ Name.mkSimple baseName
+      
+      -- For theorem, we expect a Prop. 
+      -- We need to handle parameters if any.
+      let params := pattern.parts.filterMap fun 
+        | StepPart.parameter n t => some (n, t)
+        | _ => none
+
+      let (finalType, finalValue) ← liftTermElabM <| do
+        let rec go (i : Nat) : TermElabM (Expr × Expr) := do
+          if i < params.length then
+            let (name, typeName) := params[i]!
+            let typeExpr ← Term.elabTerm (mkIdent typeName) none
+            Meta.withLocalDeclD name typeExpr fun var => do
+              let (innerType, innerValue) ← go (i + 1)
+              let t ← Meta.mkForallFVars #[var] innerType
+              let v ← Meta.mkLambdaFVars #[var] innerValue
+              pure (t, v)
+          else
+            let propExpr ← Term.elabTerm typeStx (some (mkSort levelZero))
+            Term.synthesizeSyntheticMVarsNoPostponing
+            let propExpr ← instantiateMVars propExpr
+            let proofExpr ← Term.elabTerm proofStx (some propExpr)
+            Term.synthesizeSyntheticMVarsNoPostponing
+            let propExpr ← instantiateMVars propExpr
+            let proofExpr ← instantiateMVars proofExpr
+            let propExpr ← (Meta.zetaReduce propExpr : TermElabM _)
+            let proofExpr ← (Meta.zetaReduce proofExpr : TermElabM _)
+            pure (propExpr, proofExpr)
+        go 0
+
+      if finalType.hasMVar || finalValue.hasMVar then
+        throwErrorAt typeStx "theorem contains metavariables"
+
+      let decl := Declaration.thmDecl {
+        name := theoremName
+        levelParams := []
+        type := finalType
+        value := finalValue
+      }
+      
+      liftCoreM <| Lean.addAndCompile decl
+      modifyEnv fun env => addStepDefinition env { pattern, handlerName := theoremName, defType := .theorem }
   | _ => throwUnsupportedSyntax
 
 syntax (name := printFeatures) "#print_features" : command

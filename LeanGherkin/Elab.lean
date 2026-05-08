@@ -40,21 +40,6 @@ private def elabStep : Syntax → CommandElabM Step
   | `(gherkinStep| But $text:str) => do
       let text ← syntaxString text
       pure { kind := .but, text }
-  | `(gherkinStep| given $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .given, text }
-  | `(gherkinStep| when $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .when, text }
-  | `(gherkinStep| then $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .then, text }
-  | `(gherkinStep| and $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .and, text }
-  | `(gherkinStep| but $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .but, text }
   | stx => throwErrorAt stx "unsupported gherkin step"
 
 private def logWithSeverity (stx : Syntax) (msg : String) (severity : String) : CommandElabM Unit := do
@@ -87,27 +72,6 @@ private def elabScenario (scenariosName : Syntax) : Syntax → CommandElabM Scen
           logWithSeverity scenariosName msg undefinedStepSeverity
           
       pure gherkinScenario
-  | `(gherkinScenario| scenario $name:str do $steps:gherkinStep*) => do
-      let steps ← steps.mapM elabStep
-      let gherkinScenario : Scenario := { name := ← syntaxString name, steps }
-      
-      let opts ← getOptions
-      
-      -- Milestone 3 validation
-      let validationSeverity := LeanGherkin.validationSeverity.get opts
-      let errors := validateScenario gherkinScenario
-      for err in errors do
-        logWithSeverity name err validationSeverity
-      
-      -- Milestone 4 & 6: Step Resolution
-      let env ← getEnv
-      let undefinedStepSeverity := LeanGherkin.undefinedStepSeverity.get opts
-      for step in steps do
-        if (findStepDefinition env step.text).isNone then
-          let msg := s!"undefined step: {step.text}"
-          logWithSeverity scenariosName msg undefinedStepSeverity
-          
-      pure gherkinScenario
   | stx => throwErrorAt stx "unsupported gherkin scenario"
 
 @[command_elab featureSyntax]
@@ -118,19 +82,14 @@ def elabFeature : CommandElab := fun stx => do
       let name ← syntaxString name
       let gherkinFeature : Feature := { name, scenarios }
       modifyEnv fun env => addFeature env gherkinFeature
-  | `(feature $name:str do $scenarios:gherkinScenario*) => do
-      let scenarios ← scenarios.mapM (elabScenario stx)
-      let name ← syntaxString name
-      let gherkinFeature : Feature := { name, scenarios }
-      modifyEnv fun env => addFeature env gherkinFeature
   | _ => throwUnsupportedSyntax
 
 private def formatStepKind : StepKind → String
-  | .given => "given"
-  | .when => "when"
-  | .then => "then"
-  | .and => "and"
-  | .but => "but"
+  | .given => "Given"
+  | .when => "When"
+  | .then => "Then"
+  | .and => "And"
+  | .but => "But"
 
 private def formatStep (step : Step) : String :=
   s!"    {formatStepKind step.kind} {repr step.text}"

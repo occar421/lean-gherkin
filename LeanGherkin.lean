@@ -3,6 +3,8 @@
 import LeanGherkin.Ast
 import LeanGherkin.Syntax
 import LeanGherkin.Registry
+import LeanGherkin.StepDef
 import LeanGherkin.Elab
 import LeanGherkin.Sample
 import LeanGherkin.TestDiagnostics
+import LeanGherkin.TestStepDef

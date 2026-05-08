@@ -3,6 +3,7 @@ import LeanGherkin.Registry
 import LeanGherkin.Syntax
 import LeanGherkin.Diagnostics
 import LeanGherkin.StepDef
+import LeanGherkin.Runner
 
 namespace LeanGherkin
 
@@ -134,5 +135,52 @@ def elabPrintFeatures : CommandElab := fun _ => do
     logInfo "no registered features"
   else
     logInfo <| String.intercalate "\n\n" (features.map formatFeature).toList
+
+@[command_elab runFeatureSyntax]
+def elabRunFeature : CommandElab := fun stx => do
+  let name ← syntaxString stx[1]
+  let env ← getEnv
+  let features := getFeatures env
+  let mut feature? : Option Feature := none
+  for f in features do
+    if f.name == name then
+      feature? := some f
+      break
+  match feature? with
+  | none => throwErrorAt stx[1] s!"feature not found: {name}"
+  | some (f : Feature) =>
+    let res ← liftTermElabM <| runFeature f
+    -- Milestone 5: Output each step execution to console
+    for sr in res.scenarioResults do
+      for str in sr.stepResults do
+        if str.success then
+          logInfo s!"{str.step.text}: {str.message}"
+        else
+          logError s!"{str.step.text}: {str.message}"
+    logInfo (formatFeatureResult res)
+
+@[command_elab runScenarioSyntax]
+def elabRunScenario : CommandElab := fun stx => do
+  let name ← syntaxString stx[1]
+  let env ← getEnv
+  let features := getFeatures env
+  let mut scenario? : Option Scenario := none
+  for f in features do
+    for s in f.scenarios do
+      if s.name == name then
+        scenario? := some s
+        break
+    if scenario?.isSome then break
+  match scenario? with
+  | none => throwErrorAt stx[1] s!"scenario not found: {name}"
+  | some (s : Scenario) =>
+    let res ← liftTermElabM <| runScenario s
+    -- Milestone 5: Output each step execution to console
+    for str in res.stepResults do
+      if str.success then
+        logInfo s!"{str.step.text}: {str.message}"
+      else
+        logError s!"{str.step.text}: {str.message}"
+    logInfo (formatScenarioResult res)
 
 end LeanGherkin

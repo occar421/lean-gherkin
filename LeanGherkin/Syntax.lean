@@ -15,5 +15,7 @@ syntax (name := scenarioSyntax) "scenario " str " do" ppLine gherkinStep* : gher
 syntax (name := featureSyntax) "feature " str " do" ppLine gherkinScenario* : command
 
 syntax (name := stepDefSyntax) "step_def " str " => " term : command
+syntax (name := runFeatureSyntax) "#run_feature " str : command
+syntax (name := runScenarioSyntax) "#run_scenario " str : command
 
 end LeanGherkin

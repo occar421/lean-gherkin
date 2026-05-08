@@ -19,28 +19,25 @@ register_option LeanGherkin.validationSeverity : String := {
   descr    := "severity level for scenario validation (empty steps, missing then, etc.): 'info', 'warning', 'error', or 'none'"
 }
 
-private def syntaxString (stx : Syntax) : CommandElabM String :=
+private def syntaxString (stx : Syntax) : CommandElabM String := do
+  let stx := if stx.getKind == ``LeanGherkin.gherkinText then stx[0] else stx
   match stx.isStrLit? with
   | some value => pure value
-  | none => throwErrorAt stx "expected string literal"
+  | none => 
+    match stx with
+    | Syntax.atom _ val => pure val.trimAscii.toString
+    | _ => throwErrorAt stx s!"expected string literal or raw text, got {stx}"
 
-private def elabStep : Syntax → CommandElabM Step
-  | `(gherkinStep| Given $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .given, text }
-  | `(gherkinStep| When $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .when, text }
-  | `(gherkinStep| Then $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .then, text }
-  | `(gherkinStep| And $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .and, text }
-  | `(gherkinStep| But $text:str) => do
-      let text ← syntaxString text
-      pure { kind := .but, text }
-  | stx => throwErrorAt stx "unsupported gherkin step"
+private def elabStep (stx : Syntax) : CommandElabM Step := do
+  let kind ← match stx[0] with
+    | Syntax.atom _ "Given " => pure StepKind.given
+    | Syntax.atom _ "When "  => pure StepKind.when
+    | Syntax.atom _ "Then "  => pure StepKind.then
+    | Syntax.atom _ "And "   => pure StepKind.and
+    | Syntax.atom _ "But "   => pure StepKind.but
+    | _ => throwErrorAt stx "unsupported gherkin step kind"
+  let text ← syntaxString stx[1]
+  pure { kind, text }
 
 private def logWithSeverity (stx : Syntax) (msg : String) (severity : String) : CommandElabM Unit := do
   match severity with
@@ -50,39 +47,35 @@ private def logWithSeverity (stx : Syntax) (msg : String) (severity : String) : 
   | "none"    => pure ()
   | _         => logWarningAt stx s!"unknown severity '{severity}', defaulting to warning\n{msg}"
 
-private def elabScenario (scenariosName : Syntax) : Syntax → CommandElabM Scenario
-  | `(gherkinScenario| Scenario: $name:str $steps:gherkinStep*) => do
-      let steps ← steps.mapM elabStep
-      let gherkinScenario : Scenario := { name := ← syntaxString name, steps }
+private def elabScenario (scenariosName : Syntax) (stx : Syntax) : CommandElabM Scenario := do
+  let name ← syntaxString stx[1]
+  let steps ← stx[3].getArgs.mapM elabStep
+  let gherkinScenario : Scenario := { name, steps }
+  
+  let opts ← getOptions
+  
+  -- Milestone 3 validation
+  let validationSeverity := LeanGherkin.validationSeverity.get opts
+  let errors := validateScenario gherkinScenario
+  for err in errors do
+    logWithSeverity stx[1] err validationSeverity
+  
+  -- Milestone 4 & 6: Step Resolution
+  let env ← getEnv
+  let undefinedStepSeverity := LeanGherkin.undefinedStepSeverity.get opts
+  for step in steps do
+    if (findStepDefinition env step.text).isNone then
+      let msg := s!"undefined step: {step.text}"
+      logWithSeverity scenariosName msg undefinedStepSeverity
       
-      let opts ← getOptions
-      
-      -- Milestone 3 validation
-      let validationSeverity := LeanGherkin.validationSeverity.get opts
-      let errors := validateScenario gherkinScenario
-      for err in errors do
-        logWithSeverity name err validationSeverity
-      
-      -- Milestone 4 & 6: Step Resolution
-      let env ← getEnv
-      let undefinedStepSeverity := LeanGherkin.undefinedStepSeverity.get opts
-      for step in steps do
-        if (findStepDefinition env step.text).isNone then
-          let msg := s!"undefined step: {step.text}"
-          logWithSeverity scenariosName msg undefinedStepSeverity
-          
-      pure gherkinScenario
-  | stx => throwErrorAt stx "unsupported gherkin scenario"
+  pure gherkinScenario
 
 @[command_elab featureSyntax]
 def elabFeature : CommandElab := fun stx => do
-  match stx with
-  | `(Feature: $name:str $scenarios:gherkinScenario*) => do
-      let scenarios ← scenarios.mapM (elabScenario stx)
-      let name ← syntaxString name
-      let gherkinFeature : Feature := { name, scenarios }
-      modifyEnv fun env => addFeature env gherkinFeature
-  | _ => throwUnsupportedSyntax
+  let name ← syntaxString stx[1]
+  let scenarios ← stx[3].getArgs.mapM (elabScenario stx)
+  let gherkinFeature : Feature := { name, scenarios }
+  modifyEnv fun env => addFeature env gherkinFeature
 
 private def formatStepKind : StepKind → String
   | .given => "Given"
@@ -193,7 +186,8 @@ def elabStepDef : CommandElab := fun stx => do
 
 @[command_elab runFeatureSyntax]
 def elabRunFeature : CommandElab := fun stx => do
-  let name ← syntaxString stx[1]
+  let nameStx := stx[1]
+  let name ← syntaxString nameStx
   let env ← getEnv
   let features := getFeatures env
   let mut feature? : Option Feature := none
@@ -202,7 +196,7 @@ def elabRunFeature : CommandElab := fun stx => do
       feature? := some f
       break
   match feature? with
-  | none => throwErrorAt stx[1] s!"feature not found: {name}"
+  | none => throwErrorAt nameStx s!"feature not found: {name}"
   | some (f : Feature) =>
     let res ← liftTermElabM <| runFeature f
     -- Milestone 5: Output each step execution to console
@@ -216,7 +210,8 @@ def elabRunFeature : CommandElab := fun stx => do
 
 @[command_elab runScenarioSyntax]
 def elabRunScenario : CommandElab := fun stx => do
-  let name ← syntaxString stx[1]
+  let nameStx := stx[1]
+  let name ← syntaxString nameStx
   let env ← getEnv
   let features := getFeatures env
   let mut scenario? : Option Scenario := none
@@ -227,7 +222,7 @@ def elabRunScenario : CommandElab := fun stx => do
         break
     if scenario?.isSome then break
   match scenario? with
-  | none => throwErrorAt stx[1] s!"scenario not found: {name}"
+  | none => throwErrorAt nameStx s!"scenario not found: {name}"
   | some (s : Scenario) =>
     let res ← liftTermElabM <| runScenario s
     -- Milestone 5: Output each step execution to console

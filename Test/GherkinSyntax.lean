@@ -14,20 +14,20 @@ step_def "I eat 1 apple" => do
 step_def "I should have {x:Int} apples" (x : Int) => do
   IO.println s!"[HANDLER] I should have {x} apples"
 
-Feature: "Apple counting"
-  Scenario: "Eating apples"
-    Given "I have 10 apples"
-    When "I eat 3 apples"
-    Then "I should have 7 apples"
+Feature: Apple counting
+  Scenario: Eating apples
+    Given I have 10 apples
+    When I eat 3 apples
+    Then I should have 7 apples
 
-Feature: "Apple counting with and/but"
-  Scenario: "Eating and buying apples"
-    Given "I have 10 apples"
-    And "I eat 2 apples"
-    But "I eat 1 apple"
-    Then "I should have 7 apples"
+Feature: Apple counting with and/but
+  Scenario: Eating and buying apples
+    Given I have 10 apples
+    And I eat 2 apples
+    But I eat 1 apple
+    Then I should have 7 apples
 
-#run_feature "Apple counting"
-#run_feature "Apple counting with and/but"
+#run_feature Apple counting
+#run_feature Apple counting with and/but
 
 end Test.GherkinSyntax

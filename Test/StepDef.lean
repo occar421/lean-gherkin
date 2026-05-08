@@ -16,11 +16,11 @@ Feature: "New step_def syntax"
 step_def "no parameters" => do
   IO.println "[HANDLER] No parameters"
 
-Feature: "Mixed syntax"
-  Scenario: "Test mixed"
-    Given "I add 5 and 5"
-    Then "the result should be 10"
-    And "no parameters"
+Feature: Mixed syntax
+  Scenario: Test mixed
+    Given I add 5 and 5
+    Then the result should be 10
+    And no parameters
 
 step_def "sum of {x:Int} and {y:Int} is {z:Int}" (x y z : Int) => do
   if x + y == z then
@@ -28,10 +28,10 @@ step_def "sum of {x:Int} and {y:Int} is {z:Int}" (x y z : Int) => do
   else
     IO.println s!"[HANDLER] Incorrect: {x} + {y} != {z}"
 
-Feature: "Multiple binders"
-  Scenario: "Check sum"
-    Given "sum of 1 and 2 is 3"
+Feature: Multiple binders
+  Scenario: Check sum
+    Given sum of 1 and 2 is 3
 
-#run_feature "Multiple binders"
+#run_feature New step_def syntax
 
 end Test.StepDef

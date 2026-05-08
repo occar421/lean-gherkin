@@ -29,20 +29,12 @@ def runStep (step : Step) : MetaM StepResult := do
   | none => 
     return { step, success := false, message := s!"Undefined step: {step.text}" }
   | some (defn, args) =>
-    match defn.defType with
-    | .effect =>
-      try
-        let act ← unsafe evalConst StepHandler defn.handlerName
-        let _ ← act args
-        return { step, success := true, message := "Passed" }
-      catch e =>
-        return { step, success := false, message := s!"Eval Error: {← e.toMessageData.toString}" }
-    | .theorem =>
-      -- For theorem, we don't "run" it in the same way, 
-      -- but we check if it exists and possibly verify it against args if it has parameters.
-      -- In this simple implementation, if the theorem is compiled, it's considered "passed".
-      -- Future: actually check the property if possible or use it in a larger proof.
-      return { step, success := true, message := "Proved" }
+    try
+      let act ← unsafe evalConst StepHandler defn.handlerName
+      let _ ← act args
+      return { step, success := true, message := "Passed" }
+    catch e =>
+      return { step, success := false, message := s!"Eval Error: {← e.toMessageData.toString}" }
 
 def runScenario (scenario : Scenario) : MetaM ScenarioResult := do
   let mut stepResults := #[]

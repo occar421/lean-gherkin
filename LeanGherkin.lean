@@ -9,4 +9,3 @@ import LeanGherkin.Sample
 import LeanGherkin.TestDiagnostics
 import LeanGherkin.TestStepDef
 import LeanGherkin.TestParamStepDef
-import LeanGherkin.TestTheorem

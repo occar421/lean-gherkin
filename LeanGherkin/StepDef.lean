@@ -15,18 +15,12 @@ structure StepPattern where
   parts : List StepPart
   deriving Inhabited, Repr
 
-inductive StepDefinitionType where
-  | effect : StepDefinitionType
-  | theorem : StepDefinitionType
-  deriving BEq, Repr
-
 structure StepDefinition where
   pattern : StepPattern
   handlerName : Name
-  defType : StepDefinitionType := .effect
 
 instance : Inhabited StepDefinition where
-  default := { pattern := { parts := [] }, handlerName := Name.anonymous, defType := .effect }
+  default := { pattern := { parts := [] }, handlerName := Name.anonymous }
 
 /--
 A typeclass for types that can be parsed from a Gherkin step argument string.

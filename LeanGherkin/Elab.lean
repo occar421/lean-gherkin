@@ -9,6 +9,11 @@ namespace LeanGherkin
 
 open Lean Elab Command
 
+register_option LeanGherkin.undefinedStepSeverity : String := {
+  defValue := "warning"
+  descr    := "severity level for undefined steps: 'info', 'warning', 'error', or 'none'"
+}
+
 private def syntaxString (stx : Syntax) : CommandElabM String :=
   match stx.isStrLit? with
   | some value => pure value
@@ -44,9 +49,17 @@ private def elabScenario (scenariosName : Syntax) : Syntax → CommandElabM Scen
       
       -- Milestone 4 & 6: Step Resolution
       let env ← getEnv
+      let opts ← getOptions
+      let severity := LeanGherkin.undefinedStepSeverity.get opts
       for step in steps do
         if (findStepDefinition env step.text).isNone then
-          logWarningAt scenariosName s!"undefined step: {step.text}"
+          let msg := s!"undefined step: {step.text}"
+          match severity with
+          | "error"   => throwErrorAt scenariosName msg
+          | "warning" => logWarningAt scenariosName msg
+          | "info"    => logInfoAt scenariosName msg
+          | "none"    => pure ()
+          | _         => logWarningAt scenariosName s!"unknown severity '{severity}', defaulting to warning\n{msg}"
           
       pure gherkinScenario
   | stx => throwErrorAt stx "unsupported gherkin scenario"

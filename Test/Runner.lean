@@ -1,8 +1,6 @@
-import LeanGherkin.StepDef
-import LeanGherkin.Elab
-import LeanGherkin.Runner
+import LeanGherkin
 
-namespace LeanGherkin.Test.Runner
+namespace Test.Runner
 
 step_def "a calculator" => (IO.println "[HANDLER] Initializing calculator..." : IO Unit)
 step_def "I add 1 and 2" => (IO.println "[HANDLER] Adding 1 and 2..." : IO Unit)
@@ -33,4 +31,4 @@ step_def "this step will fail if I throw an error" => (throw (IO.userError "Simu
 #run_scenario "Add two numbers"
 -- #run_feature "Failing Feature"
 
-end LeanGherkin.Test.Runner
+end Test.Runner

@@ -1,6 +1,8 @@
-import LeanGherkin.Elab
+import LeanGherkin
 
-namespace LeanGherkin
+namespace Test.Diagnostics
+
+set_option LeanGherkin.undefinedStepSeverity "none"
 
 -- 正常なシナリオ
 feature "Valid Feature" do
@@ -27,4 +29,4 @@ feature "Bad Order" do
     when "I do something"
     given "something"
 
-end LeanGherkin
+end Test.Diagnostics

@@ -1,10 +1,9 @@
-import LeanGherkin.StepDef
-import LeanGherkin.Elab
+import LeanGherkin
 
-namespace LeanGherkin.Test.ParamStepDef
+namespace Test.ParamStepDef
 
 -- 型の解決を確認するための定義
-instance : FromGherkinArg Int where
+instance : LeanGherkin.FromGherkinArg Int where
   fromGherkinArg s := s.toInt?
 
 step_def "I add {x:Int} and {y:Int}" => fun (x y : Int) => do
@@ -24,4 +23,4 @@ feature "Addition with parameters" do
 
 #run_feature "Addition with parameters"
 
-end LeanGherkin.Test.ParamStepDef
+end Test.ParamStepDef

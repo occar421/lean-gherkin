@@ -1,6 +1,9 @@
+import Lean
 import LeanGherkin.Ast
 
 namespace LeanGherkin
+
+open Lean Parser Term
 
 declare_syntax_cat gherkinStep
 declare_syntax_cat gherkinScenario
@@ -14,7 +17,7 @@ syntax "but " str : gherkinStep
 syntax (name := scenarioSyntax) "scenario " str " do" ppLine gherkinStep* : gherkinScenario
 syntax (name := featureSyntax) "feature " str " do" ppLine gherkinScenario* : command
 
-syntax (name := stepDefSyntax) "step_def " str " => " term : command
+syntax (name := stepDefSyntax) "step_def " str (ppSpace funBinder)* " => " term : command
 syntax (name := stepTheoremSyntax) "step_theorem " str " : " term " := " term : command
 syntax (name := runFeatureSyntax) "#run_feature " str : command
 syntax (name := runScenarioSyntax) "#run_scenario " str : command

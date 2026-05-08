@@ -84,7 +84,7 @@ private def formatFeature (gherkinFeature : Feature) : String :=
 @[command_elab stepDefSyntax]
 def elabStepDef : CommandElab := fun stx => do
   match stx with
-  | `(step_def $textStx:str => $handlerStx:term) => do
+  | `(step_def $textStx:str $[$binders]* => $handlerStx:term) => do
       let text ← syntaxString textStx
       let pattern := parseStepPattern text
       let env ← getEnv
@@ -107,6 +107,9 @@ def elabStepDef : CommandElab := fun stx => do
       let handlerType := mkConst ``StepHandler
       
       let elabHandler ← liftTermElabM <| do
+        -- Wrap handlerStx with binders if present
+        let fullHandlerStx ← `(fun $[$binders]* => $handlerStx)
+        
         let mut argMatches := #[]
         let mut argVars := #[]
         let mut fromGherkinArgCalls := #[]
@@ -132,7 +135,7 @@ def elabStepDef : CommandElab := fun stx => do
             `(match $call:term with | some $var => $rest | none => IO.println "Type mismatch")
           else
             let vars := vars.reverse.toArray
-            `($handlerStx $vars*)
+            `($fullHandlerStx $vars*)
 
         let innerMatch ← buildMatch 0 []
 

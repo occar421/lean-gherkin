@@ -1,30 +1,39 @@
 import LeanGherkin.StepDef
 import LeanGherkin.Elab
+import LeanGherkin.Runner
 
-namespace LeanGherkin.TestStepDef
+namespace LeanGherkin.TestNewStepDef
 
--- 1. Define some steps
-step_def "a calculator" => (IO.println "Initializing calculator..." : IO Unit)
+step_def "I add {x:Int} and {y:Int}" (x y : Int) => do
+  IO.println s!"[HANDLER] Adding {x} and {y}, sum is {x + y}"
 
-step_def "I add 1 and 2" => (IO.println "Adding 1 and 2..." : IO Unit)
+step_def "the result should be {z:Int}" (z : Int) => do
+  IO.println s!"[HANDLER] Checking if result is {z}"
 
-step_def "the result should be 3" => (IO.println "Checking result..." : IO Unit)
-
--- 2. Define a feature using these steps
-feature "Calculator Addition" do
+feature "New step_def syntax" do
   scenario "Add two numbers" do
-    given "a calculator"
-    when "I add 1 and 2"
-    then "the result should be 3"
+    given "I add 10 and 20"
+    then "the result should be 30"
 
--- 3. Check for undefined step warning
-feature "Undefined Step Test" do
-  scenario "Missing step" do
-    given "a non-existent step"
+step_def "no parameters" => do
+  IO.println "[HANDLER] No parameters"
 
--- 4. Check for duplicate step definition warning
-step_def "a calculator" => (IO.println "Duplicate definition" : IO Unit)
+feature "Mixed syntax" do
+  scenario "Test mixed" do
+    given "I add 5 and 5"
+    then "the result should be 10"
+    and "no parameters"
 
-#print_features
+step_def "sum of {x:Int} and {y:Int} is {z:Int}" (x y z : Int) => do
+  if x + y == z then
+    IO.println s!"[HANDLER] Correct: {x} + {y} = {z}"
+  else
+    IO.println s!"[HANDLER] Incorrect: {x} + {y} != {z}"
 
-end LeanGherkin.TestStepDef
+feature "Multiple binders" do
+  scenario "Check sum" do
+    given "sum of 1 and 2 is 3"
+
+#run_feature "Multiple binders"
+
+end LeanGherkin.TestNewStepDef

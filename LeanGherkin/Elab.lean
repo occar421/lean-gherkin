@@ -1,6 +1,7 @@
 import Lean
 import LeanGherkin.Registry
 import LeanGherkin.Syntax
+import LeanGherkin.Diagnostics
 
 namespace LeanGherkin
 
@@ -32,8 +33,11 @@ private def elabStep : Syntax → CommandElabM Step
 private def elabScenario : Syntax → CommandElabM Scenario
   | `(gherkinScenario| scenario $name:str do $steps:gherkinStep*) => do
       let steps ← steps.mapM elabStep
-      let name ← syntaxString name
-      pure { name, steps }
+      let gherkinScenario : Scenario := { name := ← syntaxString name, steps }
+      let errors := validateScenario gherkinScenario
+      for err in errors do
+        logWarningAt name err
+      pure gherkinScenario
   | stx => throwErrorAt stx "unsupported gherkin scenario"
 
 @[command_elab featureSyntax]

@@ -5,3 +5,4 @@ import LeanGherkin.Syntax
 import LeanGherkin.Registry
 import LeanGherkin.Elab
 import LeanGherkin.Sample
+import LeanGherkin.TestDiagnostics

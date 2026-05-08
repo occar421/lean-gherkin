@@ -6,6 +6,8 @@
 
 将来的には以下を追加する。
 
+- [x] `Feature: <str>` / `Scenario: <str>` 形式 (Gherkin 互換)
+- [x] `Given`, `When`, `Then`, `And`, `But` (大文字開始キーワード)
 - `Background`
 - `Rule`
 - `Scenario Outline`

@@ -13,13 +13,13 @@ feature "Valid Feature" do
     then "something happens"
 
 -- 警告が出るはずのシナリオ: ステップが空
-feature "Empty Scenario" do
-  scenario "empty" do
+Feature: "Empty Scenario"
+  Scenario: "empty"
     -- 何も書かない
 
 -- 警告が出るはずのシナリオ: then がない
-feature "No Then" do
-  scenario "missing then" do
+Feature: "No Then"
+  Scenario: "missing then"
     given "something"
     when "I do something"
 

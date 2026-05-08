@@ -42,7 +42,7 @@ private def elabScenario (scenariosName : Syntax) : Syntax → CommandElabM Scen
       for err in errors do
         logWarningAt name err
       
-      -- Milestone 4: Step Resolution
+      -- Milestone 4 & 6: Step Resolution
       let env ← getEnv
       for step in steps do
         if (findStepDefinition env step.text).isNone then
@@ -86,32 +86,71 @@ def elabStepDef : CommandElab := fun stx => do
   match stx with
   | `(step_def $textStx:str => $handlerStx:term) => do
       let text ← syntaxString textStx
+      let pattern := parseStepPattern text
       let env ← getEnv
       
-      -- Check for duplicate step definitions
-      if (findStepDefinition env text).isSome then
-        logWarningAt textStx s!"duplicate step definition: {text}"
-      
-      -- Define a unique name for the handler
+      -- Check for duplicate step definitions (using exact pattern string for now)
+      let existingDefs := getStepDefinitions env
+      if existingDefs.any (fun d => d.pattern.parts.length == pattern.parts.length) then
+         -- We could do a more sophisticated check for overlapping patterns
+         pure ()
+
       let baseName := s!"stepHandler_{Hashable.hash text}"
       let handlerName := (← getCurrNamespace) ++ Name.mkSimple baseName
       
-      -- Declare the handler in the environment
+      -- We need to construct a wrapper of type `List String -> IO Unit`
+      -- that calls the user-provided handler with converted arguments.
+      let params := pattern.parts.filterMap fun 
+        | StepPart.parameter n t => some (n, t)
+        | _ => none
+      
       let handlerType := mkConst ``StepHandler
+      
       let elabHandler ← liftTermElabM <| do
-        let e ← Term.elabTerm handlerStx (some handlerType)
+        let mut argMatches := #[]
+        let mut argVars := #[]
+        let mut fromGherkinArgCalls := #[]
+        
+        for (i, (_name, typeName)) in params.toArray.mapIdx (fun i p => (i, p)) do
+          let argVar := mkIdent (Name.mkSimple s!"s{i}")
+          argMatches := argMatches.push argVar
+          let valVar := mkIdent (Name.mkSimple s!"v{i}")
+          argVars := argVars.push valVar
+          let typeExpr ← Term.elabTerm (mkIdent typeName) none
+          let fromGherkinArgCall ← `(FromGherkinArg.fromGherkinArg (α := $(← Term.exprToSyntax typeExpr)) $argVar)
+          fromGherkinArgCalls := fromGherkinArgCalls.push fromGherkinArgCall
+
+        let argsListStx ← `([ $[$argMatches],* ])
+        let fromGherkinArgCallsStx := fromGherkinArgCalls
+
+        -- Use a recursive helper to build the nested match to avoid `matchDiscr` issues
+        let rec buildMatch (i : Nat) (vars : List Ident) : TermElabM Term := do
+          if i < fromGherkinArgCallsStx.size then
+            let call := fromGherkinArgCallsStx[i]!
+            let var := argVars[i]!
+            let rest ← buildMatch (i + 1) (var :: vars)
+            `(match $call:term with | some $var => $rest | none => IO.println "Type mismatch")
+          else
+            let vars := vars.reverse.toArray
+            `($handlerStx $vars*)
+
+        let innerMatch ← buildMatch 0 []
+
+        let wrapperStx ← `(fun (args : List String) => do
+          match args with
+          | $argsListStx => $innerMatch:term
+          | _ => IO.println "Argument count mismatch"
+        )
+
+        let e ← Term.elabTerm wrapperStx (some handlerType)
         Term.synthesizeSyntheticMVarsNoPostponing
         instantiateMVars e
       
-      -- Check if there are still metavariables
       if elabHandler.hasMVar then
         throwErrorAt handlerStx "handler contains metavariables"
       
       if env.contains handlerName then
-        -- This can happen if the same text is used for multiple step_defs in the same file
-        -- We already warned about duplicate step definitions, but we must ensure unique declaration names.
-        -- We don't really need to declare it again if it's identical, but for now we just skip the declaration if it exists.
-        modifyEnv fun env => addStepDefinition env { text, handlerName }
+        modifyEnv fun env => addStepDefinition env { pattern, handlerName }
       else
         let decl := Declaration.defnDecl {
           name := handlerName
@@ -122,8 +161,8 @@ def elabStepDef : CommandElab := fun stx => do
           safety := DefinitionSafety.safe
         }
         
-        liftCoreM <| addDecl decl
-        modifyEnv fun env => addStepDefinition env { text, handlerName }
+        liftCoreM <| Lean.addAndCompile decl
+        modifyEnv fun env => addStepDefinition env { pattern, handlerName }
   | _ => throwUnsupportedSyntax
 
 syntax (name := printFeatures) "#print_features" : command

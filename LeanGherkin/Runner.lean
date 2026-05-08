@@ -28,10 +28,10 @@ def runStep (step : Step) : MetaM StepResult := do
   match findStepDefinition env step.text with
   | none => 
     return { step, success := false, message := s!"Undefined step: {step.text}" }
-  | some defn =>
+  | some (defn, args) =>
     try
-      let act ← unsafe evalConst (IO Unit) defn.handlerName
-      let _ ← act
+      let act ← unsafe evalConst StepHandler defn.handlerName
+      let _ ← act args
       return { step, success := true, message := "Passed" }
     catch _ =>
       return { step, success := false, message := s!"Eval Error" }

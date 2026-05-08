@@ -18,6 +18,8 @@ feature "Calculator Addition" do
     when "I add 2 and 3"
     then "the result should be 5"
 
+set_option LeanGherkin.validationSeverity "info"
+
 feature "Failing Feature" do
   scenario "Scenario with missing step" do
     given "a non-existent step"

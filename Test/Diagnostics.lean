@@ -3,6 +3,7 @@ import LeanGherkin
 namespace Test.Diagnostics
 
 set_option LeanGherkin.undefinedStepSeverity "none"
+set_option LeanGherkin.validationSeverity "info"
 
 -- 正常なシナリオ
 feature "Valid Feature" do

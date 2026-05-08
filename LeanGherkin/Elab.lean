@@ -14,6 +14,11 @@ register_option LeanGherkin.undefinedStepSeverity : String := {
   descr    := "severity level for undefined steps: 'info', 'warning', 'error', or 'none'"
 }
 
+register_option LeanGherkin.validationSeverity : String := {
+  defValue := "warning"
+  descr    := "severity level for scenario validation (empty steps, missing then, etc.): 'info', 'warning', 'error', or 'none'"
+}
+
 private def syntaxString (stx : Syntax) : CommandElabM String :=
   match stx.isStrLit? with
   | some value => pure value
@@ -37,29 +42,34 @@ private def elabStep : Syntax → CommandElabM Step
       pure { kind := .but, text }
   | stx => throwErrorAt stx "unsupported gherkin step"
 
+private def logWithSeverity (stx : Syntax) (msg : String) (severity : String) : CommandElabM Unit := do
+  match severity with
+  | "error"   => throwErrorAt stx msg
+  | "warning" => logWarningAt stx msg
+  | "info"    => logInfoAt stx msg
+  | "none"    => pure ()
+  | _         => logWarningAt stx s!"unknown severity '{severity}', defaulting to warning\n{msg}"
+
 private def elabScenario (scenariosName : Syntax) : Syntax → CommandElabM Scenario
   | `(gherkinScenario| scenario $name:str do $steps:gherkinStep*) => do
       let steps ← steps.mapM elabStep
       let gherkinScenario : Scenario := { name := ← syntaxString name, steps }
       
+      let opts ← getOptions
+      
       -- Milestone 3 validation
+      let validationSeverity := LeanGherkin.validationSeverity.get opts
       let errors := validateScenario gherkinScenario
       for err in errors do
-        logWarningAt name err
+        logWithSeverity name err validationSeverity
       
       -- Milestone 4 & 6: Step Resolution
       let env ← getEnv
-      let opts ← getOptions
-      let severity := LeanGherkin.undefinedStepSeverity.get opts
+      let undefinedStepSeverity := LeanGherkin.undefinedStepSeverity.get opts
       for step in steps do
         if (findStepDefinition env step.text).isNone then
           let msg := s!"undefined step: {step.text}"
-          match severity with
-          | "error"   => throwErrorAt scenariosName msg
-          | "warning" => logWarningAt scenariosName msg
-          | "info"    => logInfoAt scenariosName msg
-          | "none"    => pure ()
-          | _         => logWarningAt scenariosName s!"unknown severity '{severity}', defaulting to warning\n{msg}"
+          logWithSeverity scenariosName msg undefinedStepSeverity
           
       pure gherkinScenario
   | stx => throwErrorAt stx "unsupported gherkin scenario"

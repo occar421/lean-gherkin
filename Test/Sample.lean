@@ -7,5 +7,3 @@ feature "Calculator" do
     given "a calculator"
     when "I add 1 and 2"
     then "the result should be 3"
-
-#print_features

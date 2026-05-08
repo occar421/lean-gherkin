@@ -27,6 +27,4 @@ feature "Bad Order" do
     when "I do something"
     given "something"
 
-#print_features
-
 end LeanGherkin

@@ -168,17 +168,6 @@ def elabStepDef : CommandElab := fun stx => do
         modifyEnv fun env => addStepDefinition env { pattern, handlerName }
   | _ => throwUnsupportedSyntax
 
-
-syntax (name := printFeatures) "#print_features" : command
-
-@[command_elab printFeatures]
-def elabPrintFeatures : CommandElab := fun _ => do
-  let features := getFeatures (← getEnv)
-  if features.isEmpty then
-    logInfo "no registered features"
-  else
-    logInfo <| String.intercalate "\n\n" (features.map formatFeature).toList
-
 @[command_elab runFeatureSyntax]
 def elabRunFeature : CommandElab := fun stx => do
   let name ← syntaxString stx[1]

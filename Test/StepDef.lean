@@ -2,7 +2,7 @@ import LeanGherkin.StepDef
 import LeanGherkin.Elab
 import LeanGherkin.Runner
 
-namespace LeanGherkin.TestNewStepDef
+namespace LeanGherkin.Test.StepDef
 
 step_def "I add {x:Int} and {y:Int}" (x y : Int) => do
   IO.println s!"[HANDLER] Adding {x} and {y}, sum is {x + y}"
@@ -36,4 +36,4 @@ feature "Multiple binders" do
 
 #run_feature "Multiple binders"
 
-end LeanGherkin.TestNewStepDef
+end LeanGherkin.Test.StepDef

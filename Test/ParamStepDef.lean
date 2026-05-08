@@ -1,7 +1,7 @@
 import LeanGherkin.StepDef
 import LeanGherkin.Elab
 
-namespace LeanGherkin.TestParam
+namespace LeanGherkin.Test.ParamStepDef
 
 -- 型の解決を確認するための定義
 instance : FromGherkinArg Int where
@@ -24,4 +24,4 @@ feature "Addition with parameters" do
 
 #run_feature "Addition with parameters"
 
-end LeanGherkin.TestParam
+end LeanGherkin.Test.ParamStepDef

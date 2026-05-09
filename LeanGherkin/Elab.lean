@@ -51,6 +51,7 @@ private def logWithSeverity (stx : Syntax) (msg : String) (severity : String) : 
   | "none"    => pure ()
   | _         => logWarningAt stx s!"unknown severity '{severity}', defaulting to warning\n{msg}"
 
+-- TODO: 構造化
 private def elabScenario (stx : Syntax) : CommandElabM Scenario := do
   let name ← syntaxString stx[1]
   let steps ← stx[2].getArgs.mapM elabStep
@@ -80,7 +81,7 @@ def elabFeature : CommandElab := fun stx => do
   if not enabled then throwUnsupportedSyntax
   
   let name <- syntaxString stx[1]
-  let comments := stx[2]
+  let comments := stx[2] -- TODO save comments in somewhere
   let scenarios <- stx[3].getArgs.mapM elabScenario
   let gherkinFeature : Feature := { name, scenarios }
   modifyEnv fun env => addFeature env gherkinFeature

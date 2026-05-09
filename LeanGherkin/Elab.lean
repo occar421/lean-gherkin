@@ -46,7 +46,7 @@ private def logWithSeverity (stx : Syntax) (msg : String) (severity : String) : 
   | "none"    => pure ()
   | _         => logWarningAt stx s!"unknown severity '{severity}', defaulting to warning\n{msg}"
 
-private def elabScenario (scenariosName : Syntax) (stx : Syntax) : CommandElabM Scenario := do
+private def elabScenario (stx : Syntax) : CommandElabM Scenario := do
   let name ← syntaxString stx[1]
   let steps ← stx[2].getArgs.mapM elabStep
   let gherkinScenario : Scenario := { name, steps }
@@ -57,22 +57,22 @@ private def elabScenario (scenariosName : Syntax) (stx : Syntax) : CommandElabM 
   let validationSeverity := LeanGherkin.validationSeverity.get opts
   let errors := validateScenario gherkinScenario
   for err in errors do
-    logWithSeverity stx[1] err validationSeverity
+    logWithSeverity stx err validationSeverity
   
   -- Milestone 4 & 6: Step Resolution
   let env ← getEnv
   let undefinedStepSeverity := LeanGherkin.undefinedStepSeverity.get opts
-  for step in steps do
+  for (step, stxStx) in steps.zip stx[2].getArgs do
     if (findStepDefinition env step.text).isNone then
       let msg := s!"undefined step: {step.text}"
-      logWithSeverity scenariosName msg undefinedStepSeverity
+      logWithSeverity stxStx msg undefinedStepSeverity
       
   pure gherkinScenario
 
 @[command_elab featureSyntax]
 def elabFeature : CommandElab := fun stx => do
   let name ← syntaxString stx[1]
-  let scenarios ← stx[2].getArgs.mapM (elabScenario stx)
+  let scenarios ← stx[2].getArgs.mapM elabScenario
   let gherkinFeature : Feature := { name, scenarios }
   modifyEnv fun env => addFeature env gherkinFeature
 

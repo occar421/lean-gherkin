@@ -2,6 +2,8 @@ import LeanGherkin
 
 namespace Test.Option
 
+set_option LeanGherkin.enableGherkinSyntax true
+
 set_option LeanGherkin.undefinedStepSeverity "info" in
 Feature: Info level
   Scenario: Should info

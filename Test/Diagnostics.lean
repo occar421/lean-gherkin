@@ -2,6 +2,8 @@ import LeanGherkin
 
 namespace Test.Diagnostics
 
+set_option LeanGherkin.enableGherkinSyntax true
+
 set_option LeanGherkin.undefinedStepSeverity "none"
 set_option LeanGherkin.validationSeverity "info"
 

@@ -27,6 +27,8 @@ def elabLoadLean : CommandElab := fun stx => do
     | Except.ok stx => elabCommand stx
     | Except.error err => throwError (m!"Error in {path}: {err}")
 
+set_option LeanGherkin.enableGherkinSyntax true
+
 load_gherkin_files "./Test/fixtures"
 
 end Test.WithFixtures

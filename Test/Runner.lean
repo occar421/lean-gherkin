@@ -2,6 +2,8 @@ import LeanGherkin
 
 namespace Test.Runner
 
+set_option LeanGherkin.enableGherkinSyntax true
+
 step_def "a calculator" => (IO.println "[HANDLER] Initializing calculator..." : IO Unit)
 step_def "I add 1 and 2" => (IO.println "[HANDLER] Adding 1 and 2..." : IO Unit)
 step_def "the result should be 3" => (IO.println "[HANDLER] Checking result..." : IO Unit)

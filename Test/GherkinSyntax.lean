@@ -2,6 +2,8 @@ import LeanGherkin
 
 namespace Test.GherkinSyntax
 
+set_option LeanGherkin.enableGherkinSyntax true
+
 step_def "I have {x:Int} apples" (x : Int) => do
   IO.println s!"[HANDLER] I have {x} apples"
 

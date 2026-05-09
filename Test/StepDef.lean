@@ -2,6 +2,8 @@ import LeanGherkin
 
 namespace Test.StepDef
 
+set_option LeanGherkin.enableGherkinSyntax true
+
 step_def "I add {x:Int} and {y:Int}" (x y : Int) => do
   IO.println s!"[HANDLER] Adding {x} and {y}, sum is {x + y}"
 

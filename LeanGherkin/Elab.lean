@@ -9,6 +9,11 @@ namespace LeanGherkin
 
 open Lean Elab Command
 
+register_option LeanGherkin.enableGherkinSyntax : Bool := {
+  defValue := false
+  descr    := "enable Gherkin syntax in Lean or imported file"
+}
+
 register_option LeanGherkin.undefinedStepSeverity : String := {
   defValue := "info"
   descr    := "severity level for undefined steps: 'info', 'warning', 'error', or 'none'"
@@ -71,6 +76,9 @@ private def elabScenario (stx : Syntax) : CommandElabM Scenario := do
 
 @[command_elab featureSyntax]
 def elabFeature : CommandElab := fun stx => do
+  let enabled := LeanGherkin.enableGherkinSyntax.get (<- getOptions)
+  if not enabled then throwUnsupportedSyntax
+  
   let name ← syntaxString stx[1]
   let scenarios ← stx[2].getArgs.mapM elabScenario
   let gherkinFeature : Feature := { name, scenarios }

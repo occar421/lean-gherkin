@@ -37,7 +37,7 @@ syntax scenarioSyntaxOpening := "Scenario:"
 syntax featureSyntaxOpening := "Feature:"
 
 syntax (name := scenarioSyntax) scenarioSyntaxOpening gherkinText (colGt gherkinStep*): gherkinScenario
-syntax (name := featureSyntax) featureSyntaxOpening gherkinText (colGt gherkinScenario)*: command
+syntax (name := featureSyntax) featureSyntaxOpening gherkinText (colGt "#" gherkinText)* (colGt gherkinScenario)*: command
 
 syntax (name := stepDefSyntax) "step_def " str (ppSpace funBinder)* " => " term : command
 syntax (name := runFeatureSyntax) "#run_feature " gherkinText : command

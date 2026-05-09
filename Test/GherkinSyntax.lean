@@ -17,6 +17,7 @@ step_def "I should have {x:Int} apples" (x : Int) => do
   IO.println s!"[HANDLER] I should have {x} apples"
 
 Feature: Apple counting
+  # This is a comment
   Scenario: Eating apples
     Given I have 10 apples
     When I eat 3 apples

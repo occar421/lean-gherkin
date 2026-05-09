@@ -79,8 +79,9 @@ def elabFeature : CommandElab := fun stx => do
   let enabled := LeanGherkin.enableGherkinSyntax.get (<- getOptions)
   if not enabled then throwUnsupportedSyntax
   
-  let name ← syntaxString stx[1]
-  let scenarios ← stx[2].getArgs.mapM elabScenario
+  let name <- syntaxString stx[1]
+  let comments := stx[2]
+  let scenarios <- stx[3].getArgs.mapM elabScenario
   let gherkinFeature : Feature := { name, scenarios }
   modifyEnv fun env => addFeature env gherkinFeature
 

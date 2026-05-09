@@ -10,12 +10,12 @@ def validateScenario (scenario : Scenario) : Array String := Id.run do
   
   -- 1. シナリオにステップが存在すること
   if scenario.steps.isEmpty then
-    errors := errors.push s!"scenario '{scenario.name}' has no steps"
+    errors := errors.push s!"Scenario '{scenario.name}' has no steps"
   
   -- 2. then が存在すること
   let hasThen := scenario.steps.any (fun s => s.kind == .then)
   if !scenario.steps.isEmpty && !hasThen then
-    errors := errors.push s!"scenario '{scenario.name}' must have at least one 'then' step"
+    errors := errors.push s!"Scenario '{scenario.name}' must have at least one 'Then' step"
   
   -- 3. ステップの順序の検証 (簡易的)
   -- 一般的な Gherkin の順序: Given -> When -> Then
@@ -27,11 +27,11 @@ def validateScenario (scenario : Scenario) : Array String := Id.run do
     match step.kind with
     | .given =>
       if seenWhen || seenThen then
-        errors := errors.push s!"'given' step found after 'when' or 'then' in scenario '{scenario.name}'"
+        errors := errors.push s!"'Given' step found after 'When' or 'Then' in scenario '{scenario.name}'"
     | .when =>
       seenWhen := true
       if seenThen then
-        errors := errors.push s!"'when' step found after 'then' in scenario '{scenario.name}'"
+        errors := errors.push s!"'When' step found after 'Then' in scenario '{scenario.name}'"
     | .then =>
       seenThen := true
     | .and | .but =>

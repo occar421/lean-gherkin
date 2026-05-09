@@ -10,7 +10,7 @@ namespace LeanGherkin
 open Lean Elab Command
 
 register_option LeanGherkin.undefinedStepSeverity : String := {
-  defValue := "warning"
+  defValue := "info"
   descr    := "severity level for undefined steps: 'info', 'warning', 'error', or 'none'"
 }
 
@@ -29,11 +29,11 @@ private def syntaxString (stx : Syntax) : CommandElabM String := do
 
 private def elabStep (stx : Syntax) : CommandElabM Step := do
   let kind ← match stx[0] with
-    | Syntax.atom _ "Given " => pure StepKind.given
-    | Syntax.atom _ "When "  => pure StepKind.when
-    | Syntax.atom _ "Then "  => pure StepKind.then
-    | Syntax.atom _ "And "   => pure StepKind.and
-    | Syntax.atom _ "But "   => pure StepKind.but
+    | Syntax.atom _ "Given" => pure StepKind.given
+    | Syntax.atom _ "When"  => pure StepKind.when
+    | Syntax.atom _ "Then"  => pure StepKind.then
+    | Syntax.atom _ "And"   => pure StepKind.and
+    | Syntax.atom _ "But"   => pure StepKind.but
     | _ => throwErrorAt stx "unsupported gherkin step kind"
   let text ← syntaxString stx[1]
   pure { kind, text }
@@ -48,7 +48,7 @@ private def logWithSeverity (stx : Syntax) (msg : String) (severity : String) : 
 
 private def elabScenario (scenariosName : Syntax) (stx : Syntax) : CommandElabM Scenario := do
   let name ← syntaxString stx[1]
-  let steps ← stx[3].getArgs.mapM elabStep
+  let steps ← stx[2].getArgs.mapM elabStep
   let gherkinScenario : Scenario := { name, steps }
   
   let opts ← getOptions
@@ -71,11 +71,8 @@ private def elabScenario (scenariosName : Syntax) (stx : Syntax) : CommandElabM 
 
 @[command_elab featureSyntax]
 def elabFeature : CommandElab := fun stx => do
-  dbg_trace stx
   let name ← syntaxString stx[1]
-  dbg_trace name
-  -- let scenarios ← stx[3].getArgs.mapM (elabScenario stx)
-  let scenarios := #[]
+  let scenarios ← stx[2].getArgs.mapM (elabScenario stx)
   let gherkinFeature : Feature := { name, scenarios }
   modifyEnv fun env => addFeature env gherkinFeature
 

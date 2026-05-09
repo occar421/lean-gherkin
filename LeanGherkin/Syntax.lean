@@ -36,8 +36,7 @@ syntax "But " gherkinText : gherkinStep
 syntax scenarioSyntaxOpening := "Scenario:"
 syntax featureSyntaxOpening := "Feature:"
 
--- syntax (name := scenarioSyntax) scenarioSyntaxOpening gherkinText ppLine gherkinStep* : gherkinScenario
-syntax (name := scenarioSyntax) scenarioSyntaxOpening: gherkinScenario
+syntax (name := scenarioSyntax) scenarioSyntaxOpening gherkinText (colGt gherkinStep*): gherkinScenario
 syntax (name := featureSyntax) featureSyntaxOpening gherkinText (colGt gherkinScenario)*: command
 
 syntax (name := stepDefSyntax) "step_def " str (ppSpace funBinder)* " => " term : command

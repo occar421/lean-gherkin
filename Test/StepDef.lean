@@ -8,10 +8,10 @@ step_def "I add {x:Int} and {y:Int}" (x y : Int) => do
 step_def "the result should be {z:Int}" (z : Int) => do
   IO.println s!"[HANDLER] Checking if result is {z}"
 
-Feature: "New step_def syntax"
-  Scenario: "Add two numbers"
-    Given "I add 10 and 20"
-    Then "the result should be 30"
+Feature: New step_def syntax
+  Scenario: Add two numbers
+    Given I add 10 and 20
+    Then the result should be 30
 
 step_def "no parameters" => do
   IO.println "[HANDLER] No parameters"

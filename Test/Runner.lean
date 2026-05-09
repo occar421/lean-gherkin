@@ -31,8 +31,8 @@ Feature: Failing Feature
 
 step_def "this step will fail if I throw an error" => (throw (IO.userError "Simulated failure") : IO Unit)
 
--- #run_feature Calculator Addition
--- #run_scenario Add two numbers -- TODO: FIXME
+#run_feature Calculator Addition
+#run_scenario Add two numbers
 -- #run_feature "Failing Feature"
 
 end Test.Runner

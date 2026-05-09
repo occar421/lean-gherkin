@@ -25,7 +25,8 @@ Feature: Apple counting
     Then I should have 7 apples
   
   # This is another comment
-  Scenario: Eating apples2
+  # This is another comment2
+  Scenario: Eating apples2 w/ "Scenario: b"
     Given I have 10 apples
     When I eat 3 apples
     Then I should have 7 apples

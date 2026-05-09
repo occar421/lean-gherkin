@@ -37,30 +37,14 @@ syntax "But " gherkinText : gherkinStep
 syntax scenarioSyntaxOpening := "Scenario:"
 syntax featureSyntaxOpening := "Feature:"
 
-def isGherkinDirectiveStart : Parser := symbol "Feature:" <|> "Scenario:" -- TODO 行頭のみにする
-
-def DEBUG_SEP := String.ofList (List.replicate 40 '-')
-
-def gherkinAdditionalLines : Parser :=
-{ fn := fun context state =>
-    let lookAheadState := isGherkinDirectiveStart.fn context state
-    
-    if lookAheadState.hasError then -- non-directive line
-        rawTextUntilLineEnd.fn context state -- TODO multiple lines
-    else
-      state.mkError "end of description" -- エラーを出すことで * ループを抜ける
-}
-
-@[combinator_formatter gherkinAdditionalLines]
-def gherkinAdditionalLine.formatter : Formatter := Formatter.visitAtom Name.anonymous
-@[combinator_parenthesizer gherkinAdditionalLines]
-def gherkinAdditionalLine.parenthesizer : Parenthesizer := Parenthesizer.visitToken
-
-syntax (name := scenarioSyntax) scenarioSyntaxOpening gherkinText (colGt gherkinStep)*: gherkinScenario
+syntax (name := scenarioSyntax) withPosition(
+  scenarioSyntaxOpening gherkinText
+  (colGt gherkinStep)*
+  ): gherkinScenario
 syntax (name := featureSyntax) withPosition(
   featureSyntaxOpening gherkinText
-  ((colGt gherkinAdditionalLines)? (colGt gherkinScenario))*
-  ): command -- TODO: free-form text description
+  (colGt gherkinScenario <|> rawTextUntilLineEnd)* -- TODO: check other patterns such as comment, descriptions, etc. 
+  ): command
 
 syntax (name := stepDefSyntax) "step_def " str (ppSpace funBinder)* " => " term : command
 syntax (name := runFeatureSyntax) "#run_feature " gherkinText : command

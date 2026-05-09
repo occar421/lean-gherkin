@@ -81,7 +81,8 @@ def elabFeature : CommandElab := fun stx => do
   if not enabled then throwUnsupportedSyntax
   
   let name <- syntaxString stx[1]
-  let comments := stx[2] -- TODO save comments in somewhere
+  -- TODO sprit additional line and scenarios
+  let additionalLines := stx[2] -- TODO save comments in somewhere
   let scenarios <- stx[3].getArgs.mapM elabScenario
   let gherkinFeature : Feature := { name, scenarios }
   modifyEnv fun env => addFeature env gherkinFeature

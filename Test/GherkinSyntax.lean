@@ -1,3 +1,4 @@
+import Lean
 import LeanGherkin
 
 namespace Test.GherkinSyntax
@@ -19,6 +20,12 @@ step_def "I should have {x:Int} apples" (x : Int) => do
 Feature: Apple counting
   # This is a comment
   Scenario: Eating apples
+    Given I have 10 apples
+    When I eat 3 apples
+    Then I should have 7 apples
+  
+  # This is another comment
+  Scenario: Eating apples2
     Given I have 10 apples
     When I eat 3 apples
     Then I should have 7 apples

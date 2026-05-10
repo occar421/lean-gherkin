@@ -1,10 +1,48 @@
 # lean-gherkin
 
-## 文書一覧
+Lean Gherkin is a PoC Lean 4 library that interprets Gherkin code with Lean 4 (native) parser. 
 
-- [`design.md`](design.md): DSL と内部構造の設計
-- [`spec.md`](spec.md): 仕様、想定する記法、初期 DSL の採用方針
-- [`implementation-plan.md`](implementation-plan.md): 最小実装のゴール、マイルストーン、推奨実装順序
-- [`roadmap.md`](roadmap.md): 将来的な拡張候補
-- [`review.md`](review.md): 批判的検討、リスク、未決定事項
-- [`repository-structure.md`](repository-structure.md): ディレクトリ構成案、各ファイルの責務
+## PoC Results
+
+The initial Proof of Concept (PoC) successfully demonstrates that Lean 4's powerful macro and elaboration system can support a natural Gherkin DSL.
+
+### Key Achievements
+- **Natural Gherkin Syntax**: Implemented a custom parser that supports the classic Gherkin structure (`Feature`, `Scenario`, `Given`, `When`, `Then`, `And`, `But`) without requiring quotes for step descriptions.
+- **Type-Safe Step Definitions**: Developed the `step_def` macro, which extracts parameters from step text (e.g., `{x:Int}`) and passes them as typed arguments to Lean handlers.
+- **Interactive Feedback**: Integrated `#run_feature` and `#run_scenario` commands, allowing developers to execute and verify scenarios directly within the Lean editor during elaboration.
+- **Solid Foundation**: Established a modular architecture for AST representation, elaboration, step registration, and execution, providing a clear path for future extensions like proof integration.
+
+### Example
+
+```lean
+import LeanGherkin
+
+set_option LeanGherkin.enableGherkinSyntax true
+
+step_def "I have {x:Int} apples" (x : Int) => do
+  IO.println s!"Current apple count: {x}"
+
+Feature: Simple Addition
+  Scenario: Adding apples
+    Given I have 10 apples
+    And I eat 3 apples
+    Then I should have 7 apples
+
+#run_feature Simple Addition
+```
+
+### Restrictions
+
+- Strict Indentation: It limits free-indentation because the ordinal Lean commands are also interpreted as Gherkin directives. See [Gherkin test data](https://github.com/cucumber/gherkin/blob/main/testdata/good/descriptions.feature).
+- Unimplemented Features (just because this is PoC):
+  - Localisation: Takes time to implement but possible.
+  - Rule: Maybe easy to implement.
+  - Example, Examples, and Background : Easy to implement.
+  - `*`: Easy to implement. Validation is challenging.
+  - Scenario Outline: Possible.
+  - Secondary keywords: Possible.
+
+## Reference
+
+- [Reference | Cucumber](https://cucumber.io/docs/gherkin/reference/): Gherkin keywords.
+- [Gherkin Berp](https://github.com/cucumber/gherkin/blob/main/gherkin.berp): Gherkin grammar.
